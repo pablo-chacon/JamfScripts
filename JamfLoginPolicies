@@ -1,0 +1,52 @@
+#!/bin/sh
+
+# Jamf helper Login status.
+
+# Author: ekarlsson66@gmail.com
+# Date: 2019-08-20
+# Version: 1.1
+
+# Interacts with end user, checking for policies.
+
+jamfHelper="/Library/Application Support/JAMF/bin/jamfHelper.app/Contents/MacOS/jamfHelper"
+logo="Your Companies base64 encoded logo"
+company="/tmp/logo.png"
+
+## Verify that the JSS is available
+if /usr/local/jamf/bin/jamf checkJSSConnection -retry 0 ;
+then
+
+	echo "$logo" | base64 -D > "$company" &
+	bbnpid=$!
+	## Check for policies on the JSS
+	"$jamfHelper" \
+		-windowType utility \
+		-lockHUD \
+		-title "Login Status" \
+		-description "Checking for policies..." \
+		-icon "$company" \
+		-iconSize 150 \
+		-windowPosition lr &
+	pid=$!
+	/usr/local/jamf/bin/jamf policy -action login -username "$1"
+	/bin/kill $pid
+	exit 0;
+	
+else
+
+	echo "$logo" | base64 -D > "$company"
+	## Check for policies on the JSS
+	"$jamfHelper" \
+		-windowType utility \
+		-lockHUD \
+		-title "Login Status" \
+		-description "Checking for policies..." \
+		-icon "$company" \
+		-iconSize 150 \
+		-windowPosition lr &
+	pid=$!
+	/usr/local/jamf/bin/jamf policy -action login -username "$1"
+	/bin/kill $pid
+	exit 0;
+
+fi
